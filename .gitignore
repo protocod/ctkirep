@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+ctkirep/uploads/
+manage.py
+db_backup_20220512.sqlite3
