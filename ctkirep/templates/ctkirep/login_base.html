@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>{% block title %}{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'ctkirep/site.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'ctkirep/table.css' %}"/>
+    <script src="{% static 'ctkirep/jquery-3.6.0.js' %}"></script>
+    <script src="{% static 'ctkirep/myjs.js' %}"></script>
+    <script>
+    $( document ).ready(function() {
+        console.log( "document loaded" );
+    });
+ 
+    $( window ).on( "load", function() {
+        console.log( "window loaded" );
+    });
+    </script>
+</head>
+
+<body>
+<div class="topnav">
+    CTKIRep login
+</div>
+{% block submenu %}
+{% endblock %}
+<div class="body-content">
+    {% block content %}
+    {% endblock %}
+    <hr/>
+    <footer>
+    </footer>
+</div>
+</body>
+</html>

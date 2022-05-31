@@ -1,0 +1,17 @@
+{% extends "ctkirep/base_layout.html" %}
+{% block title %}
+Students
+{% endblock %}
+{% block submenu %}
+<div class="subnavstud">
+    <ul class="nav">
+        <li class="nav left"><span>Students</span></li>
+        {% for course in coursetypes %}
+        <li class="nav left"><a href="#">{{course.name}}</a></li>
+        {% endfor %}
+        </li>
+    </ul>
+</div>
+{% endblock %}
+{% block content %}
+{% endblock %}

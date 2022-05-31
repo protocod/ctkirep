@@ -1,0 +1,25 @@
+{% extends "ctkirep/table.html" %}
+{% block title %}
+Course subjects
+{% endblock %}
+{% block content %}
+<table>
+    <tr>
+        <th>{{ column_names.test }}</th>
+        <th>Order</td>
+        <th>Subject code</td>
+        <th>Subject name</td>
+        <th>PPL subject</td>
+        <th>ATPL subject</td>
+    </tr>
+{% for csr in course_subjects %}
+    <tr>
+    <td>{{ csr.course_order }}</td>
+    <td>{{ csr.code }}</td>
+    <td>{{ csr.fname }}</td>
+    <td>{{ csr.ppl }}</td>
+    <td>{{ csr.atpl }}</td>
+    </tr>
+{% endfor %}
+</table>
+{% endblock %}

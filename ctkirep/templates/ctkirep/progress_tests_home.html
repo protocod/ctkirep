@@ -1,0 +1,19 @@
+{% extends "ctkirep/base_layout.html" %}
+{% block title %}
+Progress tests
+{% endblock %}
+{% block submenu %}
+<div class="subnavprog">
+    <ul class="nav">
+        <li class="nav"><span>Progress tests</span></li>
+        {% for course in coursetypes %}
+            <li class="nav"><a href="{% url 'progress_tests_report' course.id %}">{{course.name}}</a></li>
+        {% endfor %}
+        <li class="nav"><a href="{% url 'pt_upload_status' 1 %}">Content status upload</a></li>
+        <li class="nav"><a href="{% url 'pt_upload_journey' 2 %}">Journey upload</a></li>
+    </ul>
+</div>
+
+{% endblock %}
+{% block content %}
+{% endblock %}

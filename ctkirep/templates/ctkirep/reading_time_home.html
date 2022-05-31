@@ -1,0 +1,18 @@
+{% extends "ctkirep/base_layout.html" %}
+{% block title %}
+Reading time
+{% endblock %}
+{% block submenu %}
+<div class="subnavread">
+    <ul class="nav">
+        <li class="nav left"><span>Reading time</span></li>
+        {% for course in coursetypes %}
+        <li class="nav left"><a href="{% url 'reading_time_report' course.id %}">{{course.name}}</a></li>
+        {% endfor %}
+        <li class="nav left"><a href="{% url 'reading_time_upload' %}">Reading times upload</a>
+        </li>
+    </ul>
+</div>
+{% endblock %}
+{% block content %}
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "ctkirep/progress_tests_home.html" %}
+{% load ctkirep_extras %}
+{% block content %}
+<div>
+  <h3> {{ subject_name }} content status report</h3>
+  <label for="sfilter">Student:</label>
+  <select name="students" id="sfilter" onchange="filterTables(this.id)">
+    <option label="All" value="stable0">
+    {% for student in students %}
+      <option label="{{ student.name }} {{ student.surname }}" value="stable{{ student.id }}">
+    {% endfor %}
+</select>
+</div>
+
+<div class="table-wrapper">
+    {% for student in students %}
+    <table class="fl-table" id="stable{{ student.id }}">
+      <caption style="text-align:left"> Student: {{ student.name }} {{ student.surname }} </caption>
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>Code</th>
+          <th>Subject</th>
+          <th>Test</th>
+          <th>Status</th>
+          <th>Timestamp (UTC)</th>
+          <th>Score</th>
+          <th>Attempts</th>
+        </tr>
+      </thead>
+      {% for st in data|get_value:student.id %}
+      <tr>
+        <td>{{ st.activity__subject__course__subject_order }}</td>
+        <td>{{ st.activity__subject__code }}</td>
+        <td>{{ st.activity__subject__fname }}</td>
+        <td>{{ st.activity__name}}</td>
+        <td{% if st.score >= 80.0 %} class="oklabel" {% elif st.score < 80.0 %} class="notoklabel"{% endif %}>{{ st.status__name|upper }}</td>
+        <td>{{ st.timestamp|date:"d.m.Y H:s" }}</td>
+        <td{% if st.score >= 80.0 %} class="oklabel" {% elif st.score < 80.0 %} class="notoklabel"{% endif %}>{{ st.score }}</td>
+        <td>{{ st.max_attempt }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endfor %}
+    </div>
+{% endblock %}

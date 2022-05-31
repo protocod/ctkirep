@@ -1,0 +1,36 @@
+{% extends "ctkirep/reading_time_home.html" %}
+{% load ctkirep_extras %}
+{% block title %}
+Reading time
+{% endblock %}
+{% block content %}
+<div>
+  <h3> {{ subject_name }} students</h3>
+</div>
+<div class="table-wrapper">
+<table class="fl-table" id="sts">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Surname</th>
+      <th>E-mail</th>
+      <th>Reading username</th>
+      <th>PT username</th>
+      <th>Start date</th>
+    </tr>
+  </thead>
+  {% for student in students %}
+  <tr>
+    <td>{{ student.name }}</td>
+    <td>{{ student.surname }}</td>
+    <td>{{ student.email_addr }}</td>
+    <td>{{ student.reading_username }}</td>
+    <td>{{ student.pt_username }} </td>
+    <td>{{ student.start_date }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+</div>
+
+{% endblock %}

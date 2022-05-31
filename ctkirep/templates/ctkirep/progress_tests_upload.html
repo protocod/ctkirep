@@ -1,0 +1,10 @@
+{% extends "ctkirep/progress_tests_home.html" %}
+{% block content %}
+<form method='post' enctype="multipart/form-data">
+    <h3>{{ label }} </h3>
+    {% csrf_token %}
+    {{form.as_p}}
+    <input type="submit" value="Submit">
+</form>
+{% endblock %}
+
