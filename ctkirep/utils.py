@@ -49,7 +49,7 @@ def bulk_reading_time(xml_path):
 
     ReadingTime.objects.bulk_create(new_data, len(new_data))
     
-    return 'OK'
+    return 'OK, {0} rows inserted'.format(new_id)
 
 def ace_contentstatus(csv_path):
     if not csv_path:

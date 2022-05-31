@@ -7,7 +7,7 @@ Students
     <ul class="nav">
         <li class="nav left"><span>Students</span></li>
         {% for course in coursetypes %}
-        <li class="nav left"><a href="#">{{course.name}}</a></li>
+        <li class="nav left"><a href="{% url 'students_table' course.id %}">{{course.name}}</a></li>
         {% endfor %}
         </li>
     </ul>

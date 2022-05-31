@@ -58,8 +58,8 @@ coverage.xml
 # Django stuff:
 *.log
 local_settings.py
-#db.sqlite3
-#db.sqlite3-journal
+*.sqlite3
+*.sqlite3-journal
 
 # Flask stuff:
 instance/
@@ -129,5 +129,3 @@ dmypy.json
 .pyre/
 
 ctkirep/uploads/
-manage.py
-db_backup_20220512.sqlite3

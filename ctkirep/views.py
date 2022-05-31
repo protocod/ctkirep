@@ -1,3 +1,4 @@
+from re import template
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.shortcuts import render, get_list_or_404
@@ -5,15 +6,12 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, PasswordChangeView
-from django.db.models import Sum, F,  OuterRef, Subquery, Max
+from django.db.models import Sum, F, Func, OuterRef, Subquery, Max, Value
 
 from ctkirep.forms import UploadFileForm, PTFileForm
 from ctkirep.utils import bulk_reading_time, ace_contentstatus, ace_journeyreport
 from ctkirep.models import ReadingTime, CourseType, Student, Course, ACEContentStatus,ACELearnerJourney
 
-    #path("accounts/login/", auth_views.LoginView.as_view(template_name='ctkirep/login.html'), name='login'),
-    #path("accounts/logout/", auth_views.LogoutView.as_view(), name='logout'),
-    #path("accounts/password_change/", auth_views.PasswordChangeView.as_view(template_name='ctkirep/change_password.html', success_url='home'), name='password_change'),
 #========================================================================
 class CTKIRepLoginView(LoginView):
     template = 'ctkirep/login.html'
@@ -125,11 +123,14 @@ class StudentsHomeView(LoginRequiredMixin, TemplateView):
         return context
 
 class StudentsTableView(LoginRequiredMixin, TemplateView):
-    template_name = "ctkirep/reading_time_report.html"
+    template_name = "ctkirep/students_table.html"
     students = Student.objects.none()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        students = get_list_or_404(Student, course=self.kwargs['course'])
+        students = Student.objects.filter(course=self.kwargs['course']).annotate(sub_end=Func(F('start_date'), function='date', template="%(function)s(%(expressions)s,'+18 month')"))
+        course_types = CourseType.objects.order_by('sorder')
+        context['coursetypes'] = course_types
         context['students'] = students
+        context['subject_name'] = CourseType.objects.get(pk=self.kwargs['course']).name
         return context

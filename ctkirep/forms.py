@@ -9,7 +9,8 @@ class UploadFileForm(forms.ModelForm):
         model = ReadingTimeUpload
         fields = ['timestamp', 'file']
         widgets = {
-            'timestamp': forms.TextInput(attrs={'readonly': True})
+            'timestamp': forms.TextInput(attrs={'readonly': True}),
+            'file' : forms.FileInput(attrs={'accept': '.xml'})
         }
 
 class PTFileForm(forms.ModelForm):
