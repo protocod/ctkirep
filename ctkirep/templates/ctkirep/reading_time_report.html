@@ -27,6 +27,8 @@ Reading time
       <th>Required time</th>
       <th>Reading time</th>
       <th>Difference</th>
+      <th>Last read time</th>
+      <th>Max timer</th>
     </tr>
   </thead>
   {% for st in data|get_value:student.id %}
@@ -44,6 +46,8 @@ Reading time
     {% else %}
       <td>{{ st.diff|diffduration }}</td>
     {% endif %}
+    <td>{{ st.last_time|date:"d.m.Y H:s" }}</td>
+    <td>{{ st.alert }}</td>
   </tr>
   {% endfor %}
 </table>

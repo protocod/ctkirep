@@ -1,4 +1,4 @@
-from re import template
+from datetime import timedelta
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.shortcuts import render, get_list_or_404
@@ -6,7 +6,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, PasswordChangeView
-from django.db.models import Sum, F, Func, OuterRef, Subquery, Max, Value
+from django.db.models import Sum, F, Func, OuterRef, Subquery, Max, Count, Q
 
 from ctkirep.forms import UploadFileForm, PTFileForm
 from ctkirep.utils import bulk_reading_time, ace_contentstatus, ace_journeyreport
@@ -39,6 +39,23 @@ class ReadingTimeView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         students = get_list_or_404(Student, course=self.kwargs['course'])
         context['students'] = students
+        data = dict()
+        for student in students:
+            rt = ReadingTime.objects.values('student_id', 'activity_id').annotate(totaltime=Sum('duration'), last_time=Max('end'), alert=Count('duration', filter=Q(duration=timedelta(minutes=90)))).filter(student_id=student.id, activity_id=OuterRef('ractivity_id'))
+            st_data = Course.objects.filter(type=self.kwargs['course']).values('subject_order', 'subject__id', 'subject__code', 'subject__fname', 'ractivity__name', 'reqtime', 'ractivity_id').annotate(totaltime=Subquery(rt.values('totaltime')),last_time=Subquery(rt.values('last_time')),diff=F('totaltime')-F('reqtime'), alert=Subquery(rt.values('alert'))).order_by('subject_order')
+            data[student.id] = st_data
+        context['data'] = data
+        context['coursetypes'] = CourseType.objects.order_by('sorder')
+        context['subject_name'] = CourseType.objects.get(pk=self.kwargs['course']).name
+        return context
+
+class ReadingTimeDetailsView(LoginRequiredMixin, TemplateView):
+    template_name = "ctkirep/reading_time_details.html"
+    students = Student.objects.none()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        students = get_list_or_404(Student, id=self.kwargs['id'])
         data = dict()
         for student in students:
             rt = ReadingTime.objects.values('student_id', 'activity_id').annotate(totaltime=Sum('duration')).filter(student_id=student.id, activity_id=OuterRef('ractivity_id'))

@@ -37,8 +37,6 @@ h2{
     background-color: white;
 }
 
-.fl-table tr:hover {background-color: #ddd;}
-
 .fl-table td, .fl-table th {
     text-align: left;
     padding: 8px;
@@ -63,6 +61,8 @@ h2{
 .fl-table tr:nth-child(even) {
     background: #F8F8F8;
 }
+
+.fl-table tr:hover {background: #ddd}
 
 .fl-table caption {
     text-align:left;

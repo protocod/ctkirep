@@ -19,7 +19,8 @@ class PTFileForm(forms.ModelForm):
         model = PTUpload
         fields = ['timestamp', 'file']
         widgets = {
-            'timestamp': forms.TextInput(attrs={'readonly': True})
+            'timestamp': forms.TextInput(attrs={'readonly': True}),
+            'file' : forms.FileInput(attrs={'accept': '.csv'})
         }
 
 class StudentForm(forms.ModelForm):
