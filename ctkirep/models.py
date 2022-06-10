@@ -10,7 +10,7 @@ class CourseType(models.Model):
 
 class CourseSubject(models.Model):
     code = models.CharField("Subject code", max_length=10,unique=True)
-    fname = models.CharField("Subject name", max_length=50)
+    fname = models.CharField("Subject name", max_length=100)
 
 class Course(models.Model):
     type = models.ForeignKey(CourseType, on_delete=models.CASCADE)
@@ -81,7 +81,7 @@ class ACELearnerJourney(models.Model):
     duration = models.DurationField(verbose_name="Reading duration", null=True)
     activity = models.ForeignKey(ACEActivity, on_delete=models.CASCADE, verbose_name="Activity")
     action = models.ForeignKey(ACEStatus, on_delete=models.CASCADE, verbose_name="Action")
-    response = models.CharField(max_length=100)
+    response = models.TextField()
     score = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Score', null=True)
 
 class PTUpload(models.Model):
