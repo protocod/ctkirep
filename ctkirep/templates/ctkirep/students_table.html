@@ -27,8 +27,8 @@ Students
     <td>{{ student.email_addr }}</td>
     <td>{{ student.reading_username }}</td>
     <td>{{ student.pt_username }} </td>
-    <td>{{ student.start_date }}</td>
-    <td>{{ student.sub_end }}</td>
+    <td>{{ student.start_date|date:"d.m.Y" }}</td>
+    <td>{{ student.sub_end|date:"d.m.Y" }}</td>
   </tr>
   {% endfor %}
 </table>

@@ -85,9 +85,12 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 if DEVELOPMENT_MODE is True:
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'db',
+            'USER': 'dbu',
+            'PASSWORD': 'vRofEda2T8bjqQ2c11ao',
+            'HOST': 'localhost',
         }
     }
 elif len(sys.argv) > 0 and sys.argv[1] != 'collectstatic':
@@ -146,4 +149,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, UPLOAD_DIR)
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
-SESSION_COOKIE_AGE = 600
+if DEVELOPMENT_MODE is False:
+    SESSION_COOKIE_AGE = 600

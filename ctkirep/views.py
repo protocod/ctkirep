@@ -6,7 +6,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, PasswordChangeView
-from django.db.models import Sum, F, Func, OuterRef, Subquery, Max, Count, Q
+from django.db.models import Sum, F, OuterRef, Subquery, Max, Count, Q, DateField, ExpressionWrapper
 
 from ctkirep.forms import UploadFileForm, PTFileForm
 from ctkirep.utils import bulk_reading_time, ace_contentstatus, ace_journeyreport
@@ -145,7 +145,8 @@ class StudentsTableView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        students = Student.objects.filter(course=self.kwargs['course']).annotate(sub_end=Func(F('start_date'), function='date', template="%(function)s(%(expressions)s,'+18 month')"))
+
+        students = Student.objects.filter(course=self.kwargs['course']).annotate(sub_end=ExpressionWrapper(F('start_date') + 18*30, output_field=DateField()))
         course_types = CourseType.objects.order_by('sorder')
         context['coursetypes'] = course_types
         context['students'] = students
