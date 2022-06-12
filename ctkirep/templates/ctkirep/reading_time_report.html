@@ -12,8 +12,9 @@ Reading time
     {% for student in students %}
       <option label="{{ student.name }} {{ student.surname }}" value="stable{{ student.id }}">
     {% endfor %}
-</select>
+  </select>
 </div>
+
 <div class="table-wrapper">
 {% for student in students %}
 <table class="fl-table" id="stable{{ student.id }}">

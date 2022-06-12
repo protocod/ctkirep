@@ -16,7 +16,7 @@ def duration(dt):
         hours += dt.days * 24
         return '{0:02}:{1:02}:{2:02}'.format(hours, minutes, seconds)
     else:
-        return "--:--:--"
+        return ""
 
 @register.filter
 def diffduration(dt):
@@ -28,4 +28,4 @@ def diffduration(dt):
         else:
             return '{0:+03}:{1:02}:{2:02}'.format(hours, minutes, seconds)
     else:
-        return "--:--:--"
+        return ""

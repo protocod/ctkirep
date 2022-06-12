@@ -10,6 +10,7 @@
       <option label="{{ student.name }} {{ student.surname }}" value="stable{{ student.id }}">
     {% endfor %}
 </select>
+<button id="csvExport" type="button" style="float: right;" onclick="window.open('{% url 'csv_export_pt' course %}')">Export all to CSV</button>
 </div>
 
 <div class="table-wrapper">

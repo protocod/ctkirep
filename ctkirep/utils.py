@@ -1,11 +1,14 @@
 from os import stat
 import xml.etree.ElementTree as ET
-import csv, time
+import csv
+import time
 from datetime import datetime, timedelta
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Max
 
-from ctkirep.models import ReadingActivity, ReadingTime, Student, ACEContentStatus, ACEActivity, ACEStatus, ACEActivityType, ACELearnerJourney
+from django.db.models import Sum, F, OuterRef, Subquery, Max, Count, Q, DateField, ExpressionWrapper
+from ctkirep.models import Course, ReadingActivity, ReadingTime, Student, ACEContentStatus, ACEActivity, ACEStatus, ACEActivityType, ACELearnerJourney
+
 
 def bulk_reading_time(xml_path):
     try:
@@ -44,11 +47,12 @@ def bulk_reading_time(xml_path):
         except ObjectDoesNotExist:
             return 'Reading activity [' + xactivity + '] not valid'
 
-        new_data.append(ReadingTime(student=st, activity=ra, start=dt1, end=dt2, duration=(dt2-dt1), id=new_id))
+        new_data.append(ReadingTime(student=st, activity=ra,
+                        start=dt1, end=dt2, duration=(dt2-dt1), id=new_id))
         new_id += 1
 
     ReadingTime.objects.bulk_create(new_data, len(new_data))
-    
+
     return 'OK, {0} rows inserted'.format(new_id)
 
 def ace_contentstatus(csv_path):
@@ -59,9 +63,11 @@ def ace_contentstatus(csv_path):
         csv_file = open(csv_path, newline='')
     except OSError as osErr:
         return osErr.strerror()
-    
-    schema1 = ['\ufeffUsername','First name','Surname','Groups','Timestamp','Date','Time','Activity ID','Activity external reference','Activity name','Display type','Status','Score','CPD points','Learning hours']
-    schema2 = ['Username','First name','Surname','Groups','Timestamp','Date','Time','Activity ID','Activity external reference','Activity name','Display type','Status','Score','CPD points','Learning hours']
+
+    schema1 = ['\ufeffUsername', 'First name', 'Surname', 'Groups', 'Timestamp', 'Date', 'Time', 'Activity ID',
+               'Activity external reference', 'Activity name', 'Display type', 'Status', 'Score', 'CPD points', 'Learning hours']
+    schema2 = ['Username', 'First name', 'Surname', 'Groups', 'Timestamp', 'Date', 'Time', 'Activity ID',
+               'Activity external reference', 'Activity name', 'Display type', 'Status', 'Score', 'CPD points', 'Learning hours']
     try:
         csvrdr = csv.DictReader(csv_file)
         if schema1 != csvrdr.fieldnames:
@@ -72,25 +78,28 @@ def ace_contentstatus(csv_path):
         else:
             usercol = '\ufeffUsername'
 
-        for row in csvrdr:            
+        for row in csvrdr:
             try:
                 st = Student.objects.get(pt_username=row[usercol].strip())
             except ObjectDoesNotExist:
                 return 'Username [' + row[usercol] + '] not valid'
-            
-            #Timestamp
+
+            # Timestamp
             ts = None
             if row['Timestamp'] != '-':
-                ts = datetime.strptime(row['Timestamp'].strip(), '%Y-%m-%dT%H:%M:%S.%fZ')
+                ts = datetime.strptime(
+                    row['Timestamp'].strip(), '%Y-%m-%dT%H:%M:%S.%fZ')
 
-            #Activity
+            # Activity
             try:
-                ate = ACEActivityType.objects.get(name=row['Display type'].strip())
+                ate = ACEActivityType.objects.get(
+                    name=row['Display type'].strip())
             except ObjectDoesNotExist:
                 return 'Unknown activity type: ' + row['Display type']
 
             try:
-                act = ACEActivity.objects.get(name=row['Activity name'].strip())
+                act = ACEActivity.objects.get(
+                    name=row['Activity name'].strip())
             except ObjectDoesNotExist:
                 return 'Unknown activity: ' + row['Activity name']
 
@@ -103,7 +112,8 @@ def ace_contentstatus(csv_path):
             if row['Score'].strip() != '-':
                 scr = row['Score']
 
-            ACEContentStatus.objects.update_or_create(student=st, activity=act, defaults={'timestamp':ts, 'status':stat, 'score':scr})
+            ACEContentStatus.objects.update_or_create(student=st, activity=act, defaults={
+                                                      'timestamp': ts, 'status': stat, 'score': scr})
 
     except csv.Error as csvErr:
         return 'file {}, line {}: {}'.format(csv_path, csvrdr.line_num, csvErr)
@@ -120,8 +130,10 @@ def ace_journeyreport(csv_path):
     except OSError as osErr:
         return osErr.strerror()
 
-    schema1 = ['\ufeffUsername', 'First name', 'Surname', 'Groups', 'Timestamp', 'Date', 'Time', 'Attempt', 'Duration', 'Statement ID', 'Course ID', 'Course', 'Activity ID', 'Activity name', 'Type', 'Action', 'Response', 'Mark', 'Score']
-    schema2 = ['Username', 'First name', 'Surname', 'Groups', 'Timestamp', 'Date', 'Time', 'Attempt', 'Duration', 'Statement ID', 'Course ID', 'Course', 'Activity ID', 'Activity name', 'Type', 'Action', 'Response', 'Mark', 'Score']
+    schema1 = ['\ufeffUsername', 'First name', 'Surname', 'Groups', 'Timestamp', 'Date', 'Time', 'Attempt', 'Duration',
+               'Statement ID', 'Course ID', 'Course', 'Activity ID', 'Activity name', 'Type', 'Action', 'Response', 'Mark', 'Score']
+    schema2 = ['Username', 'First name', 'Surname', 'Groups', 'Timestamp', 'Date', 'Time', 'Attempt', 'Duration',
+               'Statement ID', 'Course ID', 'Course', 'Activity ID', 'Activity name', 'Type', 'Action', 'Response', 'Mark', 'Score']
 
     try:
         csvrdr = csv.DictReader(csv_file)
@@ -134,7 +146,8 @@ def ace_journeyreport(csv_path):
             usercol = '\ufeffUsername'
 
         time_check = dict()
-        last_time = ACELearnerJourney.objects.values('student__pt_username').annotate(maxts=Max('timestamp'))
+        last_time = ACELearnerJourney.objects.values(
+            'student__pt_username').annotate(maxts=Max('timestamp'))
         for lt in last_time:
             time_check[lt['student__pt_username']] = lt['maxts']
 
@@ -142,58 +155,63 @@ def ace_journeyreport(csv_path):
         for row in csvrdr:
             if (len(row['Action'])) == 0:
                 continue
-            
-            #Check if this record is new
+
+            # Check if this record is new
             lastts = time_check.get(row[usercol].strip())
-   
-            #Timestamp
-            ts = datetime.strptime(row['Timestamp'].strip(), '%Y-%m-%dT%H:%M:%S.%fZ')
+
+            # Timestamp
+            ts = datetime.strptime(
+                row['Timestamp'].strip(), '%Y-%m-%dT%H:%M:%S.%fZ')
 
             if (lastts) and (ts <= lastts):
                 continue
 
-            #Student
+            # Student
             try:
                 st = Student.objects.get(pt_username=row[usercol].strip())
             except ObjectDoesNotExist:
                 return 'Username [' + row[usercol] + '] not valid'
 
-            #Attempt
+            # Attempt
             atmpt = int(row['Attempt'].strip())
 
-            #Duration
+            # Duration
             dr = None
             if len(row['Duration']):
-                times = time.strptime(row['Duration'].replace('PT',''), '%HH%MM%SS')
-                dr = timedelta(hours=times.tm_hour, minutes=times.tm_min, seconds=times.tm_sec)
+                times = time.strptime(
+                    row['Duration'].replace('PT', ''), '%HH%MM%SS')
+                dr = timedelta(hours=times.tm_hour,
+                               minutes=times.tm_min, seconds=times.tm_sec)
 
-            #Activity type
+            # Activity type
             try:
-                activity_type = ACEActivityType.objects.get(name=row['Type'].strip())
+                activity_type = ACEActivityType.objects.get(
+                    name=row['Type'].strip())
             except ObjectDoesNotExist:
                 return 'Unknown activity type: ' + row['Type']
 
-            #Activity
+            # Activity
             try:
                 act = ACEActivity.objects.get(name=row['Course'].strip())
             except ObjectDoesNotExist:
                 return 'Unknown activity: ' + row['Course']
 
-            #Action
+            # Action
             try:
                 stat = ACEStatus.objects.get(name=row['Action'].strip())
             except ObjectDoesNotExist:
                 return 'Unknown activity status: ' + row['Action']
 
-            #Response
+            # Response
             resp = row['Response']
 
-            #Score
+            # Score
             scr = None
             if row['Score'].strip() != '-':
                 scr = row['Score']
 
-            new_data.append(ACELearnerJourney(student=st, timestamp=ts, attempt=atmpt, duration=dr, activity=act, action=stat, response=resp, score=scr))
+            new_data.append(ACELearnerJourney(student=st, timestamp=ts, attempt=atmpt,
+                            duration=dr, activity=act, action=stat, response=resp, score=scr))
 
         if len(new_data):
             ACELearnerJourney.objects.bulk_create(new_data, len(new_data))

@@ -10,6 +10,7 @@ Reading time
         <li class="nav left"><a href="{% url 'reading_time_report' course.id %}">{{course.name}}</a></li>
         {% endfor %}
         <li class="nav left"><a href="{% url 'reading_time_upload' %}">Reading times upload</a>
+        <li class="nav left"><a href="{% url 'reading_time_export' %}">Export data</a>
         </li>
     </ul>
 </div>
