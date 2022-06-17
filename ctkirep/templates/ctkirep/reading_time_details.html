@@ -1,0 +1,53 @@
+{% extends "ctkirep/reading_time_home.html" %}
+{% load ctkirep_extras %}
+{% block title %}
+Reading time
+{% endblock %}
+{% block content %}
+<div>
+  <h3> {{ subject_name }} reading time</h3>
+  <label for="sfilter">Student:</label>
+  <select name="students" id="sfilter" onchange="filterTables(this.id)">
+    <option label="All" value="stable0">
+    {% for student in students %}
+      <option label="{{ student.name }} {{ student.surname }}" value="stable{{ student.id }}">
+    {% endfor %}
+</select>
+</div>
+<div class="table-wrapper">
+{% for student in students %}
+<table class="fl-table" id="stable{{ student.id }}">
+  <caption style="text-align:left"> Student: {{ student.name }} {{ student.surname }} </caption>
+  <thead>
+    <tr>
+      <th>Order</th>
+      <th>Code</th>
+      <th>Subject</th>
+      <th>Activity</th>
+      <th>Required time</th>
+      <th>Reading time</th>
+      <th>Difference</th>
+    </tr>
+  </thead>
+  {% for st in data|get_value:student.id %}
+  <tr>
+    <td>{{ st.subject_order }}</td>
+    <td>{{ st.subject__code}}</td>
+    <td>{{ st.subject__fname }}</td>
+    <td>{{ st.ractivity__name }}</td>
+    <td>{{ st.reqtime|duration }} </td>
+    <td>{{ st.totaltime|duration }}</td>
+    {% if st.diff.total_seconds > 0 %}
+      <td class="oklabel">{{ st.diff|diffduration }}</td>
+    {% elif st.diff.total_seconds < 0 %}
+      <td class="notoklabel">{{ st.diff|diffduration }}</td>
+    {% else %}
+      <td>{{ st.diff|diffduration }}</td>
+    {% endif %}
+  </tr>
+  {% endfor %}
+</table>
+{% endfor %}
+</div>
+
+{% endblock %}
