@@ -1,12 +1,12 @@
-from os import stat
+import os
 import xml.etree.ElementTree as ET
 import csv
 import time
+
 from datetime import datetime, timedelta
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Max
 
-from django.db.models import Sum, F, OuterRef, Subquery, Max, Count, Q, DateField, ExpressionWrapper
 from ctkirep.models import Course, ReadingActivity, ReadingTime, Student, ACEContentStatus, ACEActivity, ACEStatus, ACEActivityType, ACELearnerJourney
 
 
@@ -21,9 +21,22 @@ def bulk_reading_time(xml_path):
     if trk is None:
         return 'Invalid XML file: ' + xml_path
 
-    ReadingTime.objects.all().delete()
-    new_id = 1
+    # ReadingTime.objects.all().delete()
+    new_id = ReadingTime.objects.aggregate(lr=Max('id'))['lr']
+    if new_id is None:
+        new_id = 0
+    new_id += 1
+
     new_data = list()
+    students = dict()
+    ractivities = dict()
+
+    for student in Student.objects.all().annotate(last_read=Max('readingtime__end')):
+        students[student.reading_username] = student
+
+    for ractivity in ReadingActivity.objects.all():
+        ractivities[ractivity.name] = ractivity
+
     for res in trk.findall('result'):
         ident = res.find('identifier').text
         xactivity = res.find('activity').text
@@ -38,22 +51,25 @@ def bulk_reading_time(xml_path):
         dt1 = datetime.strptime(stime, '%d/%m/%Y %H:%M:%S')
         dt2 = datetime.strptime(etime, '%d/%m/%Y %H:%M:%S')
 
-        try:
-            st = Student.objects.get(reading_username=ident)
-        except ObjectDoesNotExist:
+        st = students.get(ident)
+        if(st is None):
             return 'Username [' + ident + '] not valid'
-        try:
-            ra = ReadingActivity.objects.get(name=xactivity)
-        except ObjectDoesNotExist:
+
+        ra = ractivities.get(xactivity)
+        if(ra is None):
             return 'Reading activity [' + xactivity + '] not valid'
 
-        new_data.append(ReadingTime(student=st, activity=ra,
-                        start=dt1, end=dt2, duration=(dt2-dt1), id=new_id))
+        if(st.last_read and (dt2 <= st.last_read)):
+            continue
+
+        new_data.append(ReadingTime(student=st, activity=ra,start=dt1, end=dt2, duration=(dt2-dt1), id=new_id))
         new_id += 1
 
-    ReadingTime.objects.bulk_create(new_data, len(new_data))
+    if(len(new_data) > 0):
+        ReadingTime.objects.bulk_create(new_data, len(new_data))
 
-    return 'OK, {0} rows inserted'.format(new_id)
+    os.remove(xml_path)
+    return 'OK, {0} new rows inserted, total rows in file {1}'.format(len(new_data), len(trk.findall('result')))
 
 def ace_contentstatus(csv_path):
     if not csv_path:
@@ -68,6 +84,8 @@ def ace_contentstatus(csv_path):
                'Activity external reference', 'Activity name', 'Display type', 'Status', 'Score', 'CPD points', 'Learning hours']
     schema2 = ['Username', 'First name', 'Surname', 'Groups', 'Timestamp', 'Date', 'Time', 'Activity ID',
                'Activity external reference', 'Activity name', 'Display type', 'Status', 'Score', 'CPD points', 'Learning hours']
+
+    line_counter = crt_counter = upd_counter = 0
     try:
         csvrdr = csv.DictReader(csv_file)
         if schema1 != csvrdr.fieldnames:
@@ -79,6 +97,7 @@ def ace_contentstatus(csv_path):
             usercol = '\ufeffUsername'
 
         for row in csvrdr:
+            line_counter += 1
             try:
                 st = Student.objects.get(pt_username=row[usercol].strip())
             except ObjectDoesNotExist:
@@ -112,14 +131,18 @@ def ace_contentstatus(csv_path):
             if row['Score'].strip() != '-':
                 scr = row['Score']
 
-            ACEContentStatus.objects.update_or_create(student=st, activity=act, defaults={
-                                                      'timestamp': ts, 'status': stat, 'score': scr})
+            obj, created = ACEContentStatus.objects.update_or_create(student=st, activity=act, defaults={'timestamp': ts, 'status': stat, 'score': scr})
+            if(created):
+                crt_counter += 1
+            else:
+                upd_counter += 1
 
     except csv.Error as csvErr:
         return 'file {}, line {}: {}'.format(csv_path, csvrdr.line_num, csvErr)
 
     csv_file.close()
-    return 'OK'
+    os.remove(csv_path)
+    return 'OK, {0} records created, {1} records updated, {2} total records in file'.format(crt_counter, upd_counter, line_counter)
 
 def ace_journeyreport(csv_path):
     if not csv_path:
@@ -146,13 +169,14 @@ def ace_journeyreport(csv_path):
             usercol = '\ufeffUsername'
 
         time_check = dict()
-        last_time = ACELearnerJourney.objects.values(
-            'student__pt_username').annotate(maxts=Max('timestamp'))
+        last_time = ACELearnerJourney.objects.values('student__pt_username').annotate(maxts=Max('timestamp'))
         for lt in last_time:
             time_check[lt['student__pt_username']] = lt['maxts']
 
         new_data = list()
+        line_counter = 0
         for row in csvrdr:
+            line_counter += 1
             if (len(row['Action'])) == 0:
                 continue
 
@@ -220,4 +244,5 @@ def ace_journeyreport(csv_path):
         return 'file {}, line {}: {}'.format(csv_path, csvrdr.line_num, csvErr)
 
     csv_file.close()
-    return 'OK, {0} rows inserted'.format(len(new_data))
+    os.remove(csv_path)
+    return 'OK, {0} records created, {1} total records in file'.format(len(new_data), line_counter)
