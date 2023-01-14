@@ -44,7 +44,7 @@ class ReadingTimeView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        students = get_list_or_404(Student, course=self.kwargs['course'])
+        students = Student.objects.filter(course=self.kwargs['course'], active=True)
         context['students'] = students
         data = dict()
         for student in students:
@@ -130,7 +130,7 @@ class PTStatusReportView(PTBaseView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        students = get_list_or_404(Student, course=self.kwargs['course'])
+        students = students = Student.objects.filter(course=self.kwargs['course'], active=True)
         data = dict()
         maxatt_q = ACELearnerJourney.objects.values('student', 'activity').annotate(Max(
             'attempt')).filter(student_id=OuterRef('student_id'), activity_id=OuterRef('activity_id'))

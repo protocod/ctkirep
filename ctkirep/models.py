@@ -28,6 +28,8 @@ class Student(models.Model):
     pt_username = models.CharField("ACE login", max_length=30, unique=True, default='')
     course = models.ForeignKey(CourseType, on_delete=models.PROTECT, verbose_name="Course ID")
     start_date = models.DateField(verbose_name="Course start date", default=date.today)
+    end_date = models.DateField(verbose_name="Course end date", null=True)
+    active = models.BooleanField(verbose_name="Active", default=True)
 
 #==============================================================================================================
 class ReadingActivity(models.Model):
